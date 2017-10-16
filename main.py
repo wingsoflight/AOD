@@ -41,7 +41,7 @@ if __name__ == '__main__':
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
         cv2.imshow('E', _E)
         cv2.imshow('Frame', frame)
-        key = cv2.waitKeyEx(20)
+        key = cv2.waitKeyEx(18)
         if key == ord('q'):
             break
     camera.release()
