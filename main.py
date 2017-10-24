@@ -1,19 +1,21 @@
 import cv2
 import numpy as np
 
-def calcE():
+
+def calc_e():
     ltf_tm = lt_f.astype(np.bool)
     stf_tm = st_f.astype(np.bool)
     ltf_fm = np.invert(ltf_tm)
     stf_fm = np.invert(stf_tm)
-    E[ltf_tm & stf_fm] += 1;
-    E[ltf_fm | stf_tm] -= k;
-    E[E < 0] = 0;
-    E[E > max_e] = max_e;
+    E[ltf_tm & stf_fm] += 1
+    E[ltf_fm | stf_tm] -= k
+    E[E < 0] = 0
+    E[E > max_e] = max_e
+
 
 if __name__ == '__main__':
     camera = cv2.VideoCapture('video1.avi')
-    ret, sample = camera.read();
+    ret, sample = camera.read()
     if not ret:
         raise Exception('No signal')
     E = np.zeros((sample.shape[0], sample.shape[1]))
@@ -28,11 +30,11 @@ if __name__ == '__main__':
             raise Exception('No signal')
         lt_f = lt_bs.apply(frame, bg, learningRate=0.0001)
         st_f = st_bs.apply(frame, bg, learningRate=0.01)
-        calcE();
+        calc_e()
         _, _E = cv2.threshold(E, 299, 255, 0)
         _E = _E.astype(np.uint8)
-        _, cnts, _ = cv2.findContours(_E, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        for c in cnts:
+        _, contours, _ = cv2.findContours(_E, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        for c in contours:
             if cv2.contourArea(c) < 256:
                 continue
             (x, y, w, h) = cv2.boundingRect(c)
