@@ -14,8 +14,9 @@ def calc_e():
 
 
 if __name__ == '__main__':
-    camera = cv2.VideoCapture('video1.avi')
+    camera = cv2.VideoCapture(0)
     ret, sample = camera.read()
+    kernel = np.ones((5, 5), np.uint8)
     if not ret:
         raise Exception('No signal')
     E = np.zeros((sample.shape[0], sample.shape[1]))
@@ -33,9 +34,10 @@ if __name__ == '__main__':
         calc_e()
         _, _E = cv2.threshold(E, 299, 255, 0)
         _E = _E.astype(np.uint8)
+        _E = cv2.dilate(_E, kernel, iterations=5)
         _, contours, _ = cv2.findContours(_E, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         for c in contours:
-            if cv2.contourArea(c) < 256:
+            if cv2.contourArea(c) < 225:
                 continue
             (x, y, w, h) = cv2.boundingRect(c)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
@@ -43,7 +45,7 @@ if __name__ == '__main__':
         cv2.imshow('ShortTerm', st_f)
         cv2.imshow('Original', frame)
         key = cv2.waitKeyEx(15)
-        if key == ord('q'):
+        if key & 0xFF == 113:
             break
     camera.release()
     cv2.destroyAllWindows()
