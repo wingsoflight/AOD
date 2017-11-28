@@ -4,6 +4,7 @@ import argparse
 import datetime
 import requests
 from requests_toolbelt.multipart import MultipartEncoder
+import subprocess as sp
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--URI', help = 'URI of input video stream', default = 0)
@@ -43,6 +44,20 @@ class AbandonedObjectDetector:
         post = True
         num_objs = 0
         counter = 900
+        v_resolution = '{}x{}'.format(self.shape[1], self.shape[0])
+        fps = str(int(self.camera.get(cv2.CAP_PROP_FPS)))
+        command = ['ffmpeg',
+                   '-f', 'rawvideo',
+                   '-c:v', 'rawvideo',
+                   '-s', v_resolution,
+                   '-pix_fmt', 'bgr24',
+                   '-r', fps,
+                   '-i', '-',
+                   '-f', 'flv',
+                   '-an',
+                   '-c:v', 'libx264',
+                   'rtmp://localhost/live/test']
+        proc = sp.Popen(command, stdin=sp.PIPE, stderr=sp.PIPE)
         while True:
             ret, frame = self.camera.read()
             if not ret:
@@ -76,13 +91,15 @@ class AbandonedObjectDetector:
                 num_objs = 0
             elif num_objs:
                 counter -= 1
-            cv2.imshow('Frame', frame)
+            proc.stdin.write(frame.tostring())
             key = cv2.waitKey(1) & 0xFF
             if key is ord('q'):
                 break
         self.camera.release()
         cv2.destroyAllWindows()
-
+        proc.stdin.close()
+        proc.stderr.close()
+        proc.wait()
 if __name__ == '__main__':
     args = parser.parse_args()
     AbandonedObjectDetector(args.URI).start()
